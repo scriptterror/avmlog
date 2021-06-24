@@ -20,7 +20,7 @@ const TIME_LAYOUT string = "[2006-01-02 15:04:05 MST]"
 const VERSION = "v4.0.2 - Enigma"
 const BUFFER_SIZE = bufio.MaxScanTokenSize
 
-const REPORT_HEADERS = "RequestID, Method, URL, Computer, User, Request Result, Request Start, Request End, Request Time (ms), Db Time (ms), View Time (ms), Mount Time (ms), % Request Mounting, Mount Result, Errors, ESX-A, VC-A";
+const REPORT_HEADERS = "RequestID, Method, URL, Computer, User, Request Result, Request Start, Request End, Request Time (ms), Db Time (ms), View Time (ms), Mount Time (ms), % Request Mounting, Mount Result, Errors, ESX-A, VC-A, Params";
 
 var job_regexp       *regexp.Regexp = regexp.MustCompile("^P[0-9]+(DJ|PW)[0-9]*")
 var timestamp_regexp *regexp.Regexp = regexp.MustCompile("^(\\[[0-9-]+ [0-9:]+ UTC\\])")
@@ -38,6 +38,7 @@ var message_regexp   *regexp.Regexp = regexp.MustCompile(" P[0-9]+.*?[A-Z]+ (.*)
 var strip_regexp     *regexp.Regexp = regexp.MustCompile("(_|-)?[0-9]+([_a-zA-Z0-9%!-]+)?")
 var computer_regexp  *regexp.Regexp = regexp.MustCompile("workstation=(.*?)&")
 var user_regexp      *regexp.Regexp = regexp.MustCompile("username=(.*?)&")
+var paramsRegexp    *regexp.Regexp = regexp.MustCompile("Parameters: {(.*?)}")
 
 var vc_adapter_regexp  *regexp.Regexp = regexp.MustCompile("Acquired 'vcenter' adapter ([0-9]+) of ([0-9]+) for '.*?' in ([0-9.]+)")
 var esx_adapter_regexp *regexp.Regexp = regexp.MustCompile("Acquired 'esx' adapter ([0-9]+) of ([0-9]+) for '.*?' in ([0-9.]+)")
@@ -68,6 +69,7 @@ type request_report struct {
 	errors int64
 	vc_adapters int64
 	esx_adapters int64
+	params string
 }
 
 func main() {
@@ -240,6 +242,8 @@ func main() {
 											report.ms_request, _ = strconv.ParseFloat(complete_match[2], 64)
 											report.ms_view, _    = strconv.ParseFloat(complete_match[3], 64)
 											report.ms_db, _      = strconv.ParseFloat(complete_match[4], 64)
+										} else if params_match := paramsRegexp.FindStringSubmatch(line); len(params_match) > 1 {
+											report.params = params_match[1]
 										}
 									} else {
 										report := &request_report{step: -1, time_beg: timestamp}
@@ -300,7 +304,7 @@ func main() {
 					}
 
 					fmt.Println(fmt.Sprintf(
-						"%s, %s, /%s, %s, %s, %s, %s, %s, %.2f, %.2f, %.2f, %.2f, %.2f%%, %d, %d, %d, %d",
+						"%s, %s, /%s, %s, %s, %s, %s, %s, %.2f, %.2f, %.2f, %.2f, %.2f%%, %d, %d, %d, %d, %s",
 						k,
 						v.method,
 						v.route,
@@ -317,7 +321,8 @@ func main() {
 						len(v.mounts),
 						v.errors,
 						v.vc_adapters,
-						v.esx_adapters))
+						v.esx_adapters,
+						v.params))
 				} else {
 				  msg("missing method or time_end for " + k);
 				}
