@@ -16,36 +16,33 @@ import (
 
 // Time layouts must use the reference time `Mon Jan 2 15:04:05 MST 2006` to
 // convey the pattern with which to format/parse a given time/string
-const (
-	TIME_LAYOUT string = "[2006-01-02 15:04:05 MST]"
-	VERSION            = "v4.0.2 - Enigma"
-	BUFFER_SIZE        = bufio.MaxScanTokenSize
 
-	REPORT_HEADERS = "RequestID, Method, URL, Computer, User, Request Result, Request Start, Request End, Request Time (ms), Db Time (ms), View Time (ms), Mount Time (ms), % Request Mounting, Mount Result, Errors, ESX-A, VC-A, Params"
-)
+const TIME_LAYOUT string = "[2006-01-02 15:04:05 MST]"
+const VERSION = "v4.0.2 - Enigma"
+const BUFFER_SIZE = bufio.MaxScanTokenSize
 
-var (
-	job_regexp       *regexp.Regexp = regexp.MustCompile("^P[0-9]+(DJ|PW)[0-9]*")
-	timestamp_regexp *regexp.Regexp = regexp.MustCompile("^(\\[[0-9-]+ [0-9:]+ UTC\\])")
-	request_regexp   *regexp.Regexp = regexp.MustCompile("\\][[:space:]]+(P[0-9]+[A-Za-z]+[0-9]*) ")
-	sql_regexp       *regexp.Regexp = regexp.MustCompile("( SQL: | SQL \\()|(EXEC sp_executesql N)|( CACHE \\()")
-	ntlm_regexp      *regexp.Regexp = regexp.MustCompile(" (\\(NTLM\\)|NTLM:) ")
-	debug_regexp     *regexp.Regexp = regexp.MustCompile(" DEBUG ")
-	error_regexp     *regexp.Regexp = regexp.MustCompile("( ERROR | Exception | undefined | NilClass )")
+const REPORT_HEADERS = "RequestID, Method, URL, Computer, User, Request Result, Request Start, Request End, Request Time (ms), Db Time (ms), View Time (ms), Mount Time (ms), % Request Mounting, Mount Result, Errors, ESX-A, VC-A, Params";
 
-	complete_regexp *regexp.Regexp = regexp.MustCompile(" Completed ([0-9]+) [A-Za-z ]+ in ([0-9.]+)ms \\(Views: ([0-9.]+)ms \\| ActiveRecord: ([0-9.]+)ms\\)")
-	reconfig_regexp *regexp.Regexp = regexp.MustCompile(" RvSphere: Waking up in ReconfigVm#([a-z_]+) ")
-	result_regexp   *regexp.Regexp = regexp.MustCompile(" with result \\\"([a-z]+)\\\"")
-	route_regexp    *regexp.Regexp = regexp.MustCompile(" INFO Started ([A-Z]+) \\\"\\/([-a-zA-Z0-9_/]+)(\\?|\\\")")
-	message_regexp  *regexp.Regexp = regexp.MustCompile(" P[0-9]+.*?[A-Z]+ (.*)")
-	strip_regexp    *regexp.Regexp = regexp.MustCompile("(_|-)?[0-9]+([_a-zA-Z0-9%!-]+)?")
-	computer_regexp *regexp.Regexp = regexp.MustCompile("workstation=(.*?)&")
-	user_regexp     *regexp.Regexp = regexp.MustCompile("username=(.*?)&")
-	paramsRegexp    *regexp.Regexp = regexp.MustCompile("Parameters: {(.*?)}")
+var job_regexp       *regexp.Regexp = regexp.MustCompile("^P[0-9]+(DJ|PW)[0-9]*")
+var timestamp_regexp *regexp.Regexp = regexp.MustCompile("^(\\[[0-9-]+ [0-9:]+ UTC\\])")
+var request_regexp   *regexp.Regexp = regexp.MustCompile("\\][[:space:]]+(P[0-9]+[A-Za-z]+[0-9]*) ")
+var sql_regexp       *regexp.Regexp = regexp.MustCompile("( SQL: | SQL \\()|(EXEC sp_executesql N)|( CACHE \\()")
+var ntlm_regexp      *regexp.Regexp = regexp.MustCompile(" (\\(NTLM\\)|NTLM:) ")
+var debug_regexp     *regexp.Regexp = regexp.MustCompile(" DEBUG ")
+var error_regexp     *regexp.Regexp = regexp.MustCompile("( ERROR | Exception | undefined | NilClass )")
 
-	vc_adapter_regexp  *regexp.Regexp = regexp.MustCompile("Acquired 'vcenter' adapter ([0-9]+) of ([0-9]+) for '.*?' in ([0-9.]+)")
-	esx_adapter_regexp *regexp.Regexp = regexp.MustCompile("Acquired 'esx' adapter ([0-9]+) of ([0-9]+) for '.*?' in ([0-9.]+)")
-)
+var complete_regexp  *regexp.Regexp = regexp.MustCompile(" Completed ([0-9]+) [A-Za-z ]+ in ([0-9.]+)ms \\(Views: ([0-9.]+)ms \\| ActiveRecord: ([0-9.]+)ms\\)")
+var reconfig_regexp  *regexp.Regexp = regexp.MustCompile(" RvSphere: Waking up in ReconfigVm#([a-z_]+) ")
+var result_regexp    *regexp.Regexp = regexp.MustCompile(" with result \\\"([a-z]+)\\\"")
+var route_regexp     *regexp.Regexp = regexp.MustCompile(" INFO Started ([A-Z]+) \\\"\\/([-a-zA-Z0-9_/]+)(\\?|\\\")")
+var message_regexp   *regexp.Regexp = regexp.MustCompile(" P[0-9]+.*?[A-Z]+ (.*)")
+var strip_regexp     *regexp.Regexp = regexp.MustCompile("(_|-)?[0-9]+([_a-zA-Z0-9%!-]+)?")
+var computer_regexp  *regexp.Regexp = regexp.MustCompile("workstation=(.*?)&")
+var user_regexp      *regexp.Regexp = regexp.MustCompile("username=(.*?)&")
+var paramsRegexp    *regexp.Regexp = regexp.MustCompile("Parameters: {(.*?)}")
+
+var vc_adapter_regexp  *regexp.Regexp = regexp.MustCompile("Acquired 'vcenter' adapter ([0-9]+) of ([0-9]+) for '.*?' in ([0-9.]+)")
+var esx_adapter_regexp *regexp.Regexp = regexp.MustCompile("Acquired 'esx' adapter ([0-9]+) of ([0-9]+) for '.*?' in ([0-9.]+)")
 
 type mount_report struct {
 	queue        bool
@@ -73,7 +70,7 @@ type request_report struct {
 	errors        int64
 	vc_adapters   int64
 	esx_adapters  int64
-    params        string
+  params        string
 }
 
 func main() {
@@ -251,11 +248,12 @@ func main() {
 											report.code = complete_match[1]
 
 											report.ms_request, _ = strconv.ParseFloat(complete_match[2], 64)
-											report.ms_view, _ = strconv.ParseFloat(complete_match[3], 64)
-											report.ms_db, _ = strconv.ParseFloat(complete_match[4], 64)
+											report.ms_view, _    = strconv.ParseFloat(complete_match[3], 64)
+											report.ms_db, _      = strconv.ParseFloat(complete_match[4], 64)
 										} else if params_match := paramsRegexp.FindStringSubmatch(line); len(params_match) > 1 {
 											report.params = params_match[1]
-                                        }
+										}
+
 									} else {
 										report := &request_report{step: -1, time_beg: timestamp}
 
@@ -333,7 +331,7 @@ func main() {
 						v.errors,
 						v.vc_adapters,
 						v.esx_adapters,
-                        v.params))
+						v.params))
 				} else {
 					msg("missing method or time_end for " + k)
 				}
